@@ -16,6 +16,8 @@ let countries_list
 
 let all_time_chart, days_chart, recover_rate_chart
 
+let summaryData
+
 window.onload = async () => {
     console.log('ready . . .')
     // Only init chart on page loaded fisrt time
@@ -29,7 +31,7 @@ window.onload = async () => {
 
     await initRecoveryRate()
 
-    await loadData('Global')
+    await loadData('World')
 
     await loadCountrySelectList()
 
@@ -40,14 +42,14 @@ window.onload = async () => {
 
 loadData = async (country) => {
     startLoading()
-
+    
     await loadSummary(country)
-
-    await loadAllTimeChart(country)
-
-    await loadDaysChart(country)
-
+    
+    // await loadAllTimeChart(country)
+    
+    // await loadDaysChart(country)
     endLoading()
+
 }
 
 startLoading = () => {
@@ -59,11 +61,15 @@ endLoading = () => {
 }
 
 isGlobal = (country) => {
-    return country === 'Global'
+    return country === 'World'
 }
 
 numberWithCommas = (x) => {
     return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
+
+numberWithCommas2 = (x) => {
+    return x.replace(/,/g, '')
 }
 
 showConfirmedTotal = (total) => {
@@ -82,36 +88,63 @@ loadSummary = async (country) => {
 
     //country = slug
 
-    let summaryData = await covidApi.getSummary()
+    summaryData = await covidApi.getSummary()
+    let summary = summaryData["world_total"]
 
-    let summary = summaryData.Global
+    //list name of country
+    countries_list = summaryData["countries_stat"].map(e => e.country_name)
+    //sort list name
+    countries_list.sort((a,b) => {
+        if(a < b) { return -1; }
+        if(a > b) { return 1; }
+        return 0
+    })
+    //add world select
+    countries_list.unshift('World')
+
+    let summary_countries = summaryData["countries_stat"]
 
     if (!isGlobal(country)) {
-        summary = summaryData.Countries.filter(e => e.Slug === country)[0]
+        let summary_country = summary_countries.find(function(e) {
+           return e["country_name"] === country
+        })
+        console.log(summary_country)
+
+        showConfirmedTotal(summary_country["cases"])
+        showRecoveredTotal(summary_country["total_recovered"])
+        showDeathsTotal(summary_country["deaths"])
+
+        //Load recover rate country
+        await loadRecoveryRate(Math.round(Number.parseInt(numberWithCommas2(summary_country["total_recovered"])) / Number.parseInt(numberWithCommas2(summary_country["cases"])) * 100))
+        console.log(Number.parseInt(numberWithCommas2(summary_country["total_recovered"])) / Number.parseInt(numberWithCommas2(summary_country["cases"])) * 100)
+    }
+    else {
+        showConfirmedTotal(summary["total_cases"])
+        showRecoveredTotal(summary["total_recovered"])
+        showDeathsTotal(summary["total_deaths"])
+
+        //Load recover rate world
+        await loadRecoveryRate(Math.round(Number.parseInt(numberWithCommas2(summary["total_recovered"])) / Number.parseInt(numberWithCommas2(summary["total_cases"])) * 100))
+
     }
 
-    showConfirmedTotal(summary.TotalConfirmed)
-    showRecoveredTotal(summary.TotalRecovered)
-    showDeathsTotal(summary.TotalDeaths)
 
-    //Load recover rate
-
-    await loadRecoveryRate(Math.floor(summary.TotalRecovered / summary.TotalConfirmed * 100))
 
     //Load countries table
 
-    let casesByCountries = summaryData.Countries.sort((a, b) => b.TotalConfirmed - a.TotalConfirmed)
+    let casesByCountries = summary_countries.sort((a, b) => b['cases'] - a['cases'])
 
     let table_countries_body = document.querySelector('#table-contries tbody')
     table_countries_body.innerHTML = ''
 
+
     for (let i = 0; i < 10; i++) {
         let row = `
             <tr>
-                <td>${casesByCountries[i].Country}</td>
-                <td>${numberWithCommas(casesByCountries[i].TotalConfirmed)}</td>
-                <td>${numberWithCommas(casesByCountries[i].TotalRecovered)}</td>
-                <td>${numberWithCommas(casesByCountries[i].TotalDeaths)}</td>
+                <td>${casesByCountries[i].country_name}</td>
+                <td>${(casesByCountries[i].cases)}</td>
+                <td>${(casesByCountries[i].total_recovered)}</td>
+                <td>${(casesByCountries[i].deaths)}</td>
             </tr>
         `
         table_countries_body.innerHTML += row
@@ -122,7 +155,7 @@ loadSummary = async (country) => {
 initAllTimesChart = async () => {
     let options = {
         chart: {
-            type: 'line'
+            type: 'bar'
         },
         colors: [COLORS.confirmed, COLORS.recovered, COLORS.deaths],
         series: [],
@@ -178,14 +211,13 @@ loadAllTimeChart = async (country) => {
 
     if (isGlobal(country)) {
         let world_data = await covidApi.getWorldAllTimeCases()
-
+        console.log(world_data)
         world_data.sort((a, b) => new Date(a.Date) - new Date(b.Date))
 
         world_data.forEach(e => {
             let d = new Date(e.Date)
             labels.push(`${d.getFullYear()} - ${d.getMonth() + 1} - ${d.getDate()}`)
         })
-
         confirm_data = renderWorldData(world_data, CASE_STATUS.confirmed)
         recovered_data = renderWorldData(world_data, CASE_STATUS.recovered)
         deaths_data = renderWorldData(world_data, CASE_STATUS.deaths)
@@ -249,57 +281,57 @@ initDaysChart = async () => {
     days_chart.render()
 }
 
-loadDaysChart = async (country) => {
-    let labels = []
+// loadDaysChart = async (country) => {
+//     let labels = []
 
-    let confirm_data, recovered_data, deaths_data
+//     let confirm_data, recovered_data, deaths_data
 
-    if (isGlobal(country)) {
-        let world_data = await covidApi.getWorldDaysCases()
+//     if (isGlobal(country)) {
+//         let world_data = await covidApi.getWorldDaysCases()
 
-        world_data.sort((a, b) => new Date(a.Date) - new Date(b.Date))
+//         world_data.sort((a, b) => new Date(a.Date) - new Date(b.Date))
 
-        world_data.forEach(e => {
-            let d = new Date(e.Date)
-            labels.push(`${d.getFullYear()} - ${d.getMonth() + 1} - ${d.getDate()}`)
-        })
+//         world_data.forEach(e => {
+//             let d = new Date(e.Date)
+//             labels.push(`${d.getFullYear()} - ${d.getMonth() + 1} - ${d.getDate()}`)
+//         })
 
-        confirm_data = renderWorldData(world_data, CASE_STATUS.confirmed)
-        recovered_data = renderWorldData(world_data, CASE_STATUS.recovered)
-        deaths_data = renderWorldData(world_data, CASE_STATUS.deaths)
-    } else {
-        let confirmed = await covidApi.getCountryDaysCases(country, CASE_STATUS.confirmed)
-        let recovered = await covidApi.getCountryDaysCases(country, CASE_STATUS.recovered)
-        let deaths = await covidApi.getCountryDaysCases(country, CASE_STATUS.deaths)
+//         confirm_data = renderWorldData(world_data, CASE_STATUS.confirmed)
+//         recovered_data = renderWorldData(world_data, CASE_STATUS.recovered)
+//         deaths_data = renderWorldData(world_data, CASE_STATUS.deaths)
+//     } else {
+//         let confirmed = await covidApi.getCountryDaysCases(country, CASE_STATUS.confirmed)
+//         let recovered = await covidApi.getCountryDaysCases(country, CASE_STATUS.recovered)
+//         let deaths = await covidApi.getCountryDaysCases(country, CASE_STATUS.deaths)
 
-        confirm_data = renderData(confirmed)
-        recovered_data = renderData(recovered)
-        deaths_data = renderData(deaths)
+//         confirm_data = renderData(confirmed)
+//         recovered_data = renderData(recovered)
+//         deaths_data = renderData(deaths)
 
-        confirmed.forEach(e => {
-            let d = new Date(e.Date)
-            labels.push(`${d.getFullYear()} - ${d.getMonth() + 1} - ${d.getDate()}`)
-        })
-    }
+//         confirmed.forEach(e => {
+//             let d = new Date(e.Date)
+//             labels.push(`${d.getFullYear()} - ${d.getMonth() + 1} - ${d.getDate()}`)
+//         })
+//     }
 
-    let series = [{
-        name: 'Confirmed',
-        data: confirm_data
-    }, {
-        name: 'Recovered',
-        data: recovered_data
-    }, {
-        name: 'Deaths',
-        data: deaths_data
-    }]
+//     let series = [{
+//         name: 'Confirmed',
+//         data: confirm_data
+//     }, {
+//         name: 'Recovered',
+//         data: recovered_data
+//     }, {
+//         name: 'Deaths',
+//         data: deaths_data
+//     }]
 
-    days_chart.updateOptions({
-        series: series,
-        xaxis: {
-            categories: labels
-        }
-    })
-}
+//     days_chart.updateOptions({
+//         series: series,
+//         xaxis: {
+//             categories: labels
+//         }
+//     })
+// }
 
 initRecoveryRate = async () => {
     let options = {
@@ -310,7 +342,6 @@ initRecoveryRate = async () => {
         series: [],
         labels: ['Recovery rate'],
         colors: [COLORS.recovered]
-
 
     }
 
@@ -352,15 +383,16 @@ setDarkChart = (dark) => {
 renderCountrySelectList = (list) => {
     let country_select_list = document.querySelector('#country-select-list')
     country_select_list.querySelectorAll('div').forEach(e => e.remove())
+    
     list.forEach(e => {
         let item = document.createElement('div')
         item.classList.add('country-item')
-        item.textContent = e.Country
+        item.textContent = e.toString()
 
         item.onclick = async () => {
-            document.querySelector('#country-select span').textContent = e.Country
+            document.querySelector('#country-select span').textContent = e.toString()
             country_select_list.classList.toggle('active')
-            await loadData(e.Slug)
+            await loadData(e.toString())
         }
         
         country_select_list.appendChild(item)
@@ -368,19 +400,20 @@ renderCountrySelectList = (list) => {
 }
 
 loadCountrySelectList = async () => {
-    let summaryData = await covidApi.getSummary()
-
-    countries_list = summaryData.Countries
+    
+    // let summaryData = await covidApi.getSummary()  
+    
+    // countries_list = summaryData["countries_stat"].map(e => e.country_name)
 
     let country_select_list = document.querySelector('#country-select-list')
 
     let item = document.createElement('div')
     item.classList.add('country-item')
-    item.textContent = 'Global'
+    item.textContent = 'World'
     item.onclick = async () => {
-        document.querySelector('#country-select span').textContent = 'Global'
+        document.querySelector('#country-select span').textContent = 'World'
         country_select_list.classList.toggle('active')
-        await loadData('Global')
+        await loadData('World')
     }
     country_select_list.appendChild(item)
 
@@ -391,7 +424,7 @@ loadCountrySelectList = async () => {
 initCountryFilter = () => {
     let input = document.querySelector('#country-select-list input')
     input.onkeyup = () => {
-        let filtered = countries_list.filter(e => e.Country.toLowerCase().includes(input.value))
+        let filtered = countries_list.filter(e => e.toLowerCase().includes(input.value.toLowerCase()))
         renderCountrySelectList(filtered)
     }
 }
