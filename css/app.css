@@ -211,7 +211,9 @@ body {
 }
 
 /* End Country dropdown */
-
+.days-chart {
+    display: none;
+}
 /* Count box */
 
 .count {
