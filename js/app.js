@@ -36,8 +36,6 @@ window.onload = async () => {
 
     await initAllTimesChart()
 
-    // await initDaysChart()
-
     await initRecoveryRate()
 
     await loadData('World')
@@ -56,7 +54,6 @@ loadData = async (country) => {
     
     await loadAllTimeChart(country)
     
-    // await loadDaysChart(country)
     endLoading()
 
 }
@@ -138,7 +135,6 @@ loadSummary = async (country) => {
     }
 
 
-
     //Load countries table
 
     let casesByCountries = summary_countries.sort((a, b) => b['cases'] - a['cases'])
@@ -164,9 +160,6 @@ loadSummary = async (country) => {
 initAllTimesChart = async () => {
     let options = {
         chart: {
-            zoom: {
-                enabled: true
-              },
             height: '350',
             type: 'bar'
         },
@@ -200,14 +193,6 @@ initAllTimesChart = async () => {
     all_time_chart.render()
 }
 
-renderData = (country_data) => {
-    let res = []
-    country_data.forEach(e => {
-        res.push(e.Cases)
-    })
-    return res
-}
-
 renderWorldData = (world_data, status) => {
     let res = []
     switch (status) {
@@ -239,9 +224,6 @@ loadAllTimeChart = async (country) => {
         newCases_data = renderWorldData(world_data, CASE_STATUS.new_cases)
 
     } else {
-        // let confirmed = await covidApi.getCountryAllTimeCases(country, CASE_STATUS.confirmed)
-        // let recovered = await covidApi.getCountryAllTimeCases(country, CASE_STATUS.recovered)
-        // let deaths = await covidApi.getCountryAllTimeCases(country, CASE_STATUS.deaths)
         country_data = summary_countries.find(function(e){
                 return e.country_name===country
         })
@@ -251,24 +233,8 @@ loadAllTimeChart = async (country) => {
         totalCasesPer1m_data = renderWorldData(country_data, CASE_STATUS.total_cases_per_1m)
         newCases_data = renderWorldData(country_data, CASE_STATUS.new_cases)
 
-        // confirm_data = renderData(confirmed)
-        // recovered_data = renderData(recovered)
-        // deaths_data = renderData(deaths)
     }
 
-    // let series = [{
-    //     name: 'Active Cases',
-    //     data: activeCases_data
-    // }, {
-    //     name: 'Serious Cases',
-    //     data: seriousCases_data
-    // }, {
-    //     name: 'New Cases',
-    //     data: newCases_data
-    // }, {
-    //     name: 'New Deaths',
-    //     data: newDeathCases_data
-    // }]
     let series = [{
         name: 'Cases',
         data: [{
@@ -284,89 +250,10 @@ loadAllTimeChart = async (country) => {
     all_time_chart.updateOptions({
         series: series,
         xaxis: {
-            
             categories: ['Serious Cases', 'Total cases per 1m population', 'New Cases']
         }
     })
 }
-
-// initDaysChart = async () => {
-//     let options = {
-//         chart: {
-//             type: 'line'
-//         },
-//         colors: [COLORS.confirmed, COLORS.recovered, COLORS.deaths],
-//         series: [],
-//         xaxis: {
-//             categories: [],
-//             labels: {
-//                 show: false
-//             }
-//         },
-//         grid: {
-//             show: false
-//         },
-//         stroke: {
-//             curve: 'smooth'
-//         }
-//     }
-
-//     days_chart = new ApexCharts(document.querySelector('#days-chart'), options)
-
-//     days_chart.render()
-// }
-
-// loadDaysChart = async (country) => {
-//     let labels = []
-
-//     let confirm_data, recovered_data, deaths_data
-
-//     if (isGlobal(country)) {
-//         let world_data = await covidApi.getWorldDaysCases()
-
-//         world_data.sort((a, b) => new Date(a.Date) - new Date(b.Date))
-
-//         world_data.forEach(e => {
-//             let d = new Date(e.Date)
-//             labels.push(`${d.getFullYear()} - ${d.getMonth() + 1} - ${d.getDate()}`)
-//         })
-
-//         confirm_data = renderWorldData(world_data, CASE_STATUS.confirmed)
-//         recovered_data = renderWorldData(world_data, CASE_STATUS.recovered)
-//         deaths_data = renderWorldData(world_data, CASE_STATUS.deaths)
-//     } else {
-//         let confirmed = await covidApi.getCountryDaysCases(country, CASE_STATUS.confirmed)
-//         let recovered = await covidApi.getCountryDaysCases(country, CASE_STATUS.recovered)
-//         let deaths = await covidApi.getCountryDaysCases(country, CASE_STATUS.deaths)
-
-//         confirm_data = renderData(confirmed)
-//         recovered_data = renderData(recovered)
-//         deaths_data = renderData(deaths)
-
-//         confirmed.forEach(e => {
-//             let d = new Date(e.Date)
-//             labels.push(`${d.getFullYear()} - ${d.getMonth() + 1} - ${d.getDate()}`)
-//         })
-//     }
-
-//     let series = [{
-//         name: 'Confirmed',
-//         data: confirm_data
-//     }, {
-//         name: 'Recovered',
-//         data: recovered_data
-//     }, {
-//         name: 'Deaths',
-//         data: deaths_data
-//     }]
-
-//     days_chart.updateOptions({
-//         series: series,
-//         xaxis: {
-//             categories: labels
-//         }
-//     })
-// }
 
 initRecoveryRate = async () => {
     let options = {
@@ -435,11 +322,6 @@ renderCountrySelectList = (list) => {
 }
 
 loadCountrySelectList = async () => {
-    
-    // let summaryData = await covidApi.getSummary()  
-    
-    // countries_list = summaryData["countries_stat"].map(e => e.country_name)
-
     let country_select_list = document.querySelector('#country-select-list')
 
     let item = document.createElement('div')
