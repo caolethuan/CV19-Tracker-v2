@@ -89,7 +89,13 @@ showRecoveredTotal = (total) => {
 showDeathsTotal = (total) => {
     document.querySelector('#death-total').textContent = numberWithCommas(total)
 }
-
+showRanking = (rank) => {
+    document.querySelector('.country-ranking span').textContent = rank.toString()
+}
+showDate = () => {
+    let d = new Date;
+    document.querySelector('.date-updated span').textContent = d.toLocaleDateString()
+}
 loadSummary = async (country) => {
 
     //country = slug
@@ -155,6 +161,16 @@ loadSummary = async (country) => {
         table_countries_body.innerHTML += row
     }
 
+    //show ranking
+    let rankIndex
+    let rank = casesByCountries.find((e, index) => {
+        rankIndex=index
+        return e.country_name == country
+    })
+    if (country =='World') showRanking(0)
+    else showRanking(rankIndex+1)
+    //show date
+    showDate()
 }
 
 initAllTimesChart = async () => {
@@ -168,10 +184,17 @@ initAllTimesChart = async () => {
             bar: {
                 columnWidth: '45%',
                 distributed: true,
+                dataLabels: {
+                    position: 'top'
+                  }
             }
         },
         dataLabels: {
-            enabled:false
+            enabled:true,
+            dropShadow: {
+                enabled: true,
+                opacity: 1
+            }
         },
         legend: {
             show: false

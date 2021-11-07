@@ -210,6 +210,21 @@ body {
     background-color: var(--bg-hover);
 }
 
+.country-ranking {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 1.25rem;
+
+}
+
+.date-updated {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
 /* End Country dropdown */
 .days-chart {
     display: none;
