@@ -89,13 +89,16 @@ showRecoveredTotal = (total) => {
 showDeathsTotal = (total) => {
     document.querySelector('#death-total').textContent = numberWithCommas(total)
 }
+
 showRanking = (rank) => {
     document.querySelector('.country-ranking span').textContent = rank.toString()
 }
+
 showDate = () => {
     let d = new Date;
     document.querySelector('.date-updated span').textContent = d.toLocaleDateString()
 }
+
 loadSummary = async (country) => {
 
     //country = slug

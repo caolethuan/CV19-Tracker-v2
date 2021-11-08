@@ -213,6 +213,7 @@ body {
 .country-ranking {
     display: flex;
     justify-content: space-between;
+    padding: 0 15px;
     font-weight: 700;
     font-size: 1.25rem;
 
@@ -221,6 +222,7 @@ body {
 .date-updated {
     display: flex;
     justify-content: space-between;
+    padding: 0 15px;
     font-weight: 700;
     font-size: 1.25rem;
 }
